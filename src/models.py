@@ -1,51 +1,58 @@
 import os
 import sys
-from sqlalchemy import Column, ForeignKey, Integer, String, CheckConstraint, Enum
+from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship, declarative_base
 from sqlalchemy import create_engine
 from eralchemy2 import render_er
 
 Base = declarative_base()
-
+#Las FK normalmente son las que se relacionan con las PK.
+#Luego de definir la relación de la FK hay que especificar a la tabla que está ese id.
+#Los nombres de las tablas van en minúsculas(buenas prácticas).
+#Para representar una relación de muchos a muchos hay que hacer una tabla intermedia.
+#Convertir esos id en PK compuestas(dos llaves primarias) y a su vez hacerlas FK y luego relacionar esos id con los id de las tablas que quieres relacionar.
+#UNIQUE: el campo debe ser único.
+#nullable=False: Significa que ese campo no puede estar vacío.
 class User(Base):
     __tablename__ = 'user'
     user_id = Column(Integer, primary_key=True) 
-    username = Column(String(15), nullable=False, unique=True)
-    firstname = Column(String(20), nullable=False)
-    lastname = Column(String(20), nullable=False)
+    user_name = Column(String(15), nullable=False, unique=True)
+    first_name = Column(String(20), nullable=False)
+    last_name = Column(String(20), nullable=False)
     email = Column(String(30), nullable=False, unique=True)
 
 class Follower(Base):
     __tablename__ = 'follower'
-#Convertimos user_from_id y user_to_id en llaves primarias(compuestas) para evitar que un usuario siga a otro más de una vez.
-#A la vez son llaves foráneas para poder relacionarlas con la tabla "user".
-    user_from_id = Column(Integer, ForeignKey('User.user_id'), primary_key=True)
-    user_to_id = Column(Integer, ForeignKey('User.user_id'), primary_key=True)
-#Esta línea asegura que user_from_id y user_to_id no sean iguales(Que un usuario no se siga asi mismo).
-#CheckConstraint hay que importarlo.
-    __table_args__ = (CheckConstraint('user_from_id <> user_to_id', name='check_user_ids_not_equal'),)
+    follower_id = Column(Integer, primary_key=True)
+    user_from_id = Column(Integer, ForeignKey('user.user_id'))
+    user_from_id_relationship = relationship(User)
+    user_to_id = Column(Integer, ForeignKey('user.user_id'))
+    user_to_id_relationship = relationship(User)
 
-class Media(Base):
-    __tablename__ = 'media'
-    media_id = Column(Integer, primary_key=True)
-    #Define un tipo Enum con los valores 'image', 'video' y 'audio'. El parámetro name especifica el nombre del tipo enum en la base de datos.
-    #Definimos Enum con uno de los siguientes valores 'image, video audio'
-    #Y Le damos un nombre al conjunto de valores (name= name_type).
-    type = Column(Enum('image', 'video', 'image', name='media_type'), nullable=False)
-    url = Column(String, unique=True)
-    post_id = Column(Integer, ForeignKey('Post.user_id'))
+class Address(Base):
+     __tablename__ = 'address'
+     address_id = Column(Integer, primary_key=True)
+     user_id = Column(Integer, ForeignKey('user.user_id'))
+     user_id_relationship = relationship(User)
+     street_name = Column(String(50), nullable=False)
+     street_number = Column(Integer, nullable=False)
+     post_code = Column(Integer, nullable=False)
 
 class Post(Base):
      __tablename__ = 'post'
      post_id = Column(Integer, primary_key=True)
-     user_id = Column(Integer, ForeignKey('User.user.id'))
+     user_id = Column(Integer, ForeignKey('user.user.id'))
+     user_id_relationship = relationship(User)
 
 class Comment(Base):
      __tablename__ = 'comment'
      comment_id = Column(Integer, primary_key=True)
      comment_text = Column(String(200))
-     author_id = Column(Integer, ForeignKey('User.user_id'))
-     post_id = Column(Integer, ForeignKey('Post.post_id'))
+#No relaciono directamente el user_id(Comment) con User porque ya existe una relación indirecta entre user_id(Post) y User.
+#Pero user_id(Comment) sigue siendo importante para identificar quien hizo el comentario.
+     user_id = Column(Integer) 
+     post_id = Column(Integer, ForeignKey('post.post_id'))
+     post_id_relationship = relationship(Post)
 
 def to_dict(self):
         return {}
