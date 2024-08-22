@@ -47,7 +47,7 @@ class Post(Base):
 class Comment(Base):
      __tablename__ = 'comment'
      comment_id = Column(Integer, primary_key=True)
-     comment_text = Column(String(200))
+     comment_text = Column(String(200), nullable=False)
 #No relaciono directamente el user_id(Comment) con User porque ya existe una relación indirecta entre user_id(Post) y User.
 #Pero user_id(Comment) sigue siendo importante para identificar quien hizo el comentario.
      user_id = Column(Integer) 
